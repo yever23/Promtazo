@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Promptazo ⚡ El Generador de Prompts Perfectos</title>
+  <meta name="description" content="La herramienta #1 en español para crear prompts perfectos de IA en 10 segundos."/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    :root { --bg: #0f0f1a; --accent: #00ff9d; --text: #ffffff; --card: #1a1a2e; }
+    .light { --bg: #f8f9fa; --accent: #00ff9d; --text: #212529; --card: #ffffff; }
+    body { margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; transition:all .3s; }
+    header { background:linear-gradient(135deg,#00ff9d,#008c5c); padding:2rem; text-align:center; color:#000; }
+    h1 { margin:0; font-size:2.8rem; font-weight:800; }
+    .subtitle { font-size:1.3rem; opacity:0.9; }
+    main { flex:1; max-width:900px; margin:2rem auto; padding:0 1rem; }
+    .card { background:var(--card); padding:2rem; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.4); }
+    label { display:block; margin:1.2rem 0 0.4rem; font-weight:600; color:var(--accent); }
+    input, select, textarea { width:100%; padding:0.9rem; border-radius:12px; border:none; background:#00000022; color:var(--text); font-size:1rem; }
+    textarea { height:100px; resize:vertical; }
+    button { margin-top:2rem; width:100%; padding:1.2rem; background:var(--accent); color:#000; font-weight:800; font-size:1.4rem; border:none; border-radius:15px; cursor:pointer; transition:0.3s; }
+    button:hover { transform:scale(1.03); }
+    .tabs { display:flex; margin:2rem 0 1rem; gap:1rem; }
+    .tab { flex:1; padding:1rem; text-align:center; background:#0003; border-radius:10px; cursor:pointer; }
+    .tab.active { background:var(--accent); color:#000; font-weight:800; }
+    pre { background:#0003; padding:1.5rem; border-radius:12px; white-space:pre-wrap; word-wrap:break-word; position:relative; }
+    .copy { position:absolute; top:10px; right:10px; background:var(--accent); color:#000; border:none; padding:0.5rem 1rem; border-radius:8px; cursor:pointer; font-weight:600; }
+    footer { text-align:center; padding:2rem; opacity:0.7; font-size:0.9rem; }
+    .theme-toggle { position:fixed; top:20px; right:20px; background:var(--accent); color:#000; border:none; width:50px; height:50px; border-radius:50%; font-size:1.5rem; cursor:pointer; }
+    @media (prefers-color-scheme: light) { body { --bg:#f8f9fa; --text:#212529; --card:#ffffff; } }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.body.classList.toggle('light')">🌙</button>
+  
+  <header>
+    <h1>Promptazo ⚡</h1>
+    <p class="subtitle">El generador de prompts perfectos en español que está rompiendo internet</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <label>1. ¿Para qué herramienta es?</label>
+      <select id="tool">
+        <option>Flux / Midjourney / SD3</option>
+        <option>Grok / Claude / Gemini (texto)</option>
+        <option>Runway / Kling / Luma (video)</option>
+        <option>Todos los anteriores</option>
+      </select>
+
+      <label>2. Tu idea en una frase (lo más claro posible)</label>
+      <textarea id="idea" placeholder="Ej: un dragón de cristal volando sobre una ciudad futurista al atardecer"></textarea>
+
+      <label>3. Estilo visual</label>
+      <select id="style">
+        <option>Fotorealista máximo detalle</option>
+        <option>Cyberpunk / Neon</option>
+        <option>Anime / Studio Ghibli</option>
+        <option>Pintura al óleo clásica</option>
+        <option>Surrealista / Dalí</option>
+        <option>Vintage 35mm</option>
+        <option>Low-poly / Pixel art</option>
+        <option>Blanco y negro dramático</option>
+      </select>
+
+      <label>4. Nivel de detalle</label>
+      <select id="detail">
+        <option>Básico y limpio</option>
+        <option>Detallado profesional</option>
+        <option>ULTRA BESTIA (máximo nivel)</option>
+      </select>
+
+      <label>5. Artistas de referencia (opcional)</label>
+      <input type="text" id="artists" placeholder="Ej: Greg Rutkowski, Alphonse Mucha, Makoto Shinkai"/>
+
+      <label>6. Mood / Emoción</label>
+      <input type="text" id="mood" placeholder="melancólico, épico, terrorífico, mágico, onírico…"/>
+
+      <label>7. Aspect ratio (opcional)</label>
+      <input type="text" id="ar" placeholder="Ej: 16:9, 4:5, 1:1, --ar 3:2"/>
+
+      <button onclick="generar()">¡GENERAR MI PROMPT PERFECTO!</button>
+    </div>
+
+    <div id="result" style="display:none">
+      <div class="tabs">
+        <div class="tab active" onclick="showTab(0)">Imagen (Flux/MJ)</div>
+        <div class="tab" onclick="showTab(1)">Texto (IA)</div>
+        <div class="tab" onclick="showTab(2)">Video</div>
+      </div>
+
+      <div class="card">
+        <div id="tab0">
+          <pre id="promptImagen"></pre>
+          <button class="copy" onclick="copy(0)">Copiar ⚡</button>
+        </div>
+        <div id="tab1" style="display:none">
+          <pre id="promptTexto"></pre>
+          <button class="copy" onclick="copy(1)">Copiar ⚡</button>
+        </div>
+        <div id="tab2" style="display:none">
+          <pre id="promptVideo"></pre>
+          <button class="copy" onclick="copy(2)">Copiar ⚡</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Promptazo ♥ hecho con amor para la comunidad hispanohablante<br>
+    Comparte y explota esto: tu salida del bache empieza hoy 🔥
+  </footer>
+
+  <script>
+    function generar() {
+      const idea = document.getElementById("idea").value.trim();
+      if (!idea) return alert("¡Escribe tu idea primero!");
+
+      const tool = document.getElementById("tool").value;
+      const style = document.getElementById("style").value;
+      const detail = document.getElementById("detail").value;
+      const artists = document.getElementById("artists").value;
+      const mood = document.getElementById("mood").value;
+      const ar = document.getElementById("ar").value;
+
+      const ref = artists ? `, ${artists}` : "";
+      const moodText = mood ? `, ${mood} atmosphere` : "";
+      const ultra = detail === "ULTRA BESTIA";
+
+      // PROMPT IMAGEN
+      let promptImg = idea;
+      if (style.includes("Fotorealista")) promptImg += ", ultra photorealistic, masterpiece, 8k, cinematic lighting, sharp focus";
+      if (style.includes("Cyberpunk")) promptImg += ", cyberpunk megacity, neon lights, rain reflections, blade runner vibes";
+      if (style.includes("Anime")) promptImg += ", anime key visual, vibrant colors, detailed background, studio ghibli style";
+      if (ultra) promptImg += ", extremely detailed, intricate, best quality, absurdres, hyperdetailed, professional photography, award winning";
+      promptImg += moodText + ref + " --stylize 750 --v 6";
+      if (ar) promptImg += ` ${ar.includes("--ar") ? ar : "--ar " + ar}`;
+
+      // PROMPT TEXTO
+      const promptTexto = `Eres el mejor escritor del mundo. Crea una historia/narración/descripción ultra inmersiva y detallada sobre: ${idea}. Estilo ${style.toLowerCase()}, tono ${mood || "apasionante"}. Máxima calidad literaria.`;
+
+      // PROMPT VIDEO
+      const promptVideo = `${idea}, ${style.toLowerCase()}, ${mood || "cinematográfico"}, smooth camera movement, cinematic lighting, 4k, highly detailed, professional color grading --ar 16:9`;
+
+      document.getElementById("promptImagen").textContent = promptImg.trim();
+      document.getElementById("promptTexto").textContent = promptTexto;
+      document.getElementById("promptVideo").textContent = promptVideo;
+      document.getElementById("result").style.display = "block";
+    }
+
+    function showTab(n) {
+      document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("active", i===n));
+      document.getElementById("tab0").style.display = n===0?"block":"none";
+      document.getElementById("tab1").style.display = n===1?"block":"none";
+      document.getElementById("tab2").style.display = n===2?"block":"none";
+    }
+
+    function copy(tab) {
+      const textos = [document.getElementById("promptImagen"), document.getElementById("promptTexto"), document.getElementById("promptVideo")];
+      textos[tab].select ? textos[tab].select() : navigator.clipboard.writeText(textos[tab].textContent);
+      alert("¡Prompt copiado al portapapeles! Pégalo y rompe internet 🔥");
+    }
+  </script>
+</body>
+</html>
